@@ -1,5 +1,5 @@
 #include "app.h"
-#include "constants.h"
+#include "globals.h"
 
 MyAppDelegate::~MyAppDelegate()
 {
@@ -61,7 +61,8 @@ void MyAppDelegate::applicationWillFinishLaunching( NS::Notification* pNotificat
 
 void MyAppDelegate::applicationDidFinishLaunching( NS::Notification* pNotification )
 {
-    CGRect frame = (CGRect){ {100.0, 100.0}, {TEXTURE_WIDTH, TEXTURE_HEIGHT} };
+    CGRect frame = (CGRect){ {100.0, 100.0},
+        {static_cast<CGFloat>(global_texture_width), static_cast<CGFloat>(global_texture_height)} };
 
     _pWindow = NS::Window::alloc()->init(
         frame,

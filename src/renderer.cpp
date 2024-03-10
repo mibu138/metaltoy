@@ -1,5 +1,5 @@
 #include "renderer.h"
-#include "constants.h"
+#include "globals.h"
 
 #include <simd/simd.h>
 
@@ -329,8 +329,8 @@ void Renderer::buildTexture()
 {
     MTL::TextureDescriptor *td = MTL::TextureDescriptor::alloc()->init();
 
-    td->setWidth(TEXTURE_WIDTH);
-    td->setHeight(TEXTURE_HEIGHT);
+    td->setWidth(global_texture_width);
+    td->setHeight(global_texture_height);
     td->setPixelFormat(MTL::PixelFormatRGBA8Unorm);
     td->setTextureType(MTL::TextureType2D);
     td->setStorageMode(MTL::StorageModeManaged);
@@ -357,7 +357,7 @@ void Renderer::generateTexture()
     enc->setComputePipelineState(_computepso);
     enc->setTexture(_texture, 0);
 
-    gridsize = MTL::Size::Make(TEXTURE_WIDTH, TEXTURE_HEIGHT, 1);
+    gridsize = MTL::Size::Make(global_texture_width, global_texture_height, 1);
 
     tgs = _computepso->maxTotalThreadsPerThreadgroup();
 
