@@ -4,6 +4,8 @@
 
 unsigned int global_texture_width = 512;
 unsigned int global_texture_height = 512;
+unsigned int global_window_width = 512;
+unsigned int global_window_height = 512;
 
 int main( int argc, char* argv[] )
 {
@@ -17,8 +19,10 @@ int main( int argc, char* argv[] )
             return -1;
         }
 
-        global_texture_width = res;
-        global_texture_height = res;
+        global_window_width = res;
+        global_window_height = res;
+        global_texture_width = res * 4;
+        global_texture_height = res * 4;
     }
 
     NS::AutoreleasePool* pAutoreleasePool = NS::AutoreleasePool::alloc()->init();

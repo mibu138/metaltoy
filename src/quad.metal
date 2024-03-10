@@ -25,7 +25,7 @@ half4 fragment fragmentMain( v2f in [[stage_in]]
                         , texture2d<half, access::sample> tex [[texture(0)]]
 )
 {
-    constexpr sampler s( address::repeat, filter::nearest);
+    constexpr sampler s( address::repeat, filter::linear);
 
     half4 sample = tex.sample(s, in.uv);
 

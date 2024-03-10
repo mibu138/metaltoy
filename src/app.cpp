@@ -62,7 +62,7 @@ void MyAppDelegate::applicationWillFinishLaunching( NS::Notification* pNotificat
 void MyAppDelegate::applicationDidFinishLaunching( NS::Notification* pNotification )
 {
     CGRect frame = (CGRect){ {100.0, 100.0},
-        {static_cast<CGFloat>(global_texture_width), static_cast<CGFloat>(global_texture_height)} };
+        {static_cast<CGFloat>(global_window_width), static_cast<CGFloat>(global_window_height)} };
 
     _pWindow = NS::Window::alloc()->init(
         frame,
