@@ -46,6 +46,6 @@ kernel void computeMain(texture2d< half, access::write > tex [[texture(0)]],
     st.x = float(index.x) / gridSize.x;
     st.y = float(index.y) / gridSize.y;
 
-    half color = justice(st);
+    half color = mandelbrot(st);
     tex.write(half4(color, color, color, 1.0), index, 0);
 }
