@@ -164,12 +164,34 @@ Renderer::Renderer( MTL::Device* pDevice )
 
     buildBuffers();
     buildTexture();
+    buildRenderPipeline();
 }
 
 Renderer::~Renderer()
 {
     _cmdqueue->release();
     _device->release();
+}
+
+void Renderer::buildRenderPipeline()
+{
+    int er;
+    MTL::Library *lib;
+    MTL::RenderPipelineState *pso;
+    char *src = load_file("src/quad.metal");
+
+    assert(src && "quad shader not found");
+
+    er = build_shader_library(_device, src, &lib);
+    assert(!er && "Failed to build quad shader library");
+
+    er = build_graphics_pipeline(_device, lib, &pso);
+    assert(!er && "Failed to build quad pipeline");
+
+    lib->release();
+    free(src);
+
+    _renderpso = pso;
 }
 
 void Renderer::buildPipelinesIfNeedTo()
@@ -232,24 +254,12 @@ void Renderer::buildPipelinesIfNeedTo()
         return;
     }
 
-    er = build_graphics_pipeline(_device, shaderlib, &renderpipeline);
-
-    if (er)
-    {
-        shaderlib->release();
-        computepipeline->release();
-        return;
-    }
-
     shaderlib->release();
 
-    if (_pso)
-        _pso->release();
     if (_computepso)
         _computepso->release();
 
     _shadererror = false;
-    _pso = renderpipeline;
     _computepso = computepipeline;
 
     printf("Pipeline rebuilding complete.\n");
@@ -378,7 +388,7 @@ void Renderer::draw( MTK::View* pView )
     {
         generateTexture();
 
-        enc->setRenderPipelineState( _pso );
+        enc->setRenderPipelineState( _renderpso );
         enc->setVertexBuffer(_positionbuffer, 0, 0);
         enc->setVertexBuffer(_colorbuffer, 0, 1);
         enc->setVertexBuffer(_uvbuffer, 0, 2);

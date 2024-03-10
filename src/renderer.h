@@ -12,13 +12,14 @@ class Renderer
         void draw( MTK::View* pView );
         void buildBuffers();
         void buildTexture();
+        void buildRenderPipeline();
         void generateTexture();
         void buildPipelinesIfNeedTo();
 
     private:
         MTL::Device* _device;
         MTL::CommandQueue* _cmdqueue;
-        MTL::RenderPipelineState *_pso = nullptr;
+        MTL::RenderPipelineState *_renderpso = nullptr;
         MTL::ComputePipelineState *_computepso = nullptr;
         MTL::Buffer *_indexbuffer;
         MTL::Buffer *_positionbuffer;
