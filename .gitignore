@@ -1,0 +1,6 @@
+.DS_Store
+cmake-build-*
+*.swp
+*.cache
+build
+compile_commands.json
