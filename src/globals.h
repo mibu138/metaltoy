@@ -8,5 +8,6 @@ extern unsigned int global_texture_width;
 extern unsigned int global_texture_height;
 extern unsigned int global_window_width;
 extern unsigned int global_window_height;
+extern bool global_quiet;
 
 #endif

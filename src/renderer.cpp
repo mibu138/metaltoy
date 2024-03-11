@@ -3,6 +3,13 @@
 
 #include <simd/simd.h>
 
+static void error_msg(const char *msg)
+{
+    if (global_quiet)
+        return;
+    fprintf(stderr, "%s", msg);
+}
+
 static inline double getCurrentTimeInSeconds()
 {
     using Clock = std::chrono::high_resolution_clock;
@@ -23,7 +30,7 @@ load_file(const char *relpath)
     base = getenv("S");
     if (!base)
     {
-        fprintf(stderr, "Environment variable S is not defined. Searching current directory...\n");
+        error_msg("Environment variable S is not defined. Searching current directory...\n");
         base = ".";
     }
 
@@ -35,7 +42,8 @@ load_file(const char *relpath)
 
     if (!fd)
     {
-        fprintf(stderr, "File failed to open. Errno %d\n", errno);
+        snprintf(buf, 512, "File failed to open. Errno %d\n", errno);
+        error_msg(buf);
         return nullptr;
     }
 
@@ -68,7 +76,7 @@ static int build_shader_library(MTL::Device *device, const char *shader_src, MTL
 
     if (!lib)
     {
-        fprintf(stderr, "%s\n", error->localizedDescription()->utf8String());
+        error_msg(error->localizedDescription()->utf8String());
         return -1;
     }
 
@@ -92,7 +100,7 @@ static int build_graphics_pipeline(MTL::Device *device, MTL::Library *lib, MTL::
 
     if (!vertexfn)
     {
-        fprintf(stderr, "Failed finding vertexMain fn. Did the name change?\n");
+        error_msg("Failed finding vertexMain fn. Did the name change?\n");
         goto end2;
     }
 
@@ -100,7 +108,7 @@ static int build_graphics_pipeline(MTL::Device *device, MTL::Library *lib, MTL::
 
     if (!fragmentfn)
     {
-        fprintf(stderr, "Failed finding fragmentMain fn. Did the name change?\n");
+        error_msg("Failed finding fragmentMain fn. Did the name change?\n");
         goto end3;
     }
 
@@ -114,7 +122,7 @@ static int build_graphics_pipeline(MTL::Device *device, MTL::Library *lib, MTL::
     pso = device->newRenderPipelineState( desc, &error );
     if ( !pso)
     {
-        __builtin_printf( "%s", error->localizedDescription()->utf8String() );
+        error_msg(error->localizedDescription()->utf8String() );
         goto end4;
     }
 
@@ -139,7 +147,7 @@ static int build_compute_pipeline(MTL::Device *device, MTL::Library *lib, MTL::C
     fn = lib->newFunction( NS::String::string("computeMain", NS::UTF8StringEncoding) );
     if (!fn)
     {
-        fprintf(stderr, "Failed finding compute shader funciton\n");
+        error_msg("Failed finding compute shader funciton\n");
         return -1;
     }
 
@@ -149,7 +157,7 @@ static int build_compute_pipeline(MTL::Device *device, MTL::Library *lib, MTL::C
 
     if (!pso)
     {
-        fprintf(stderr, "Failed to create compute pipeline\n");
+        error_msg("Failed to create compute pipeline\n");
         return -1;
     }
 
@@ -161,6 +169,7 @@ Renderer::Renderer( MTL::Device* pDevice )
 : _device( pDevice->retain() )
 {
     _cmdqueue = _device->newCommandQueue();
+    _starttime = getCurrentTimeInSeconds();
 
     buildBuffers();
     buildTexture();
@@ -210,7 +219,7 @@ void Renderer::buildPipelinesIfNeedTo()
 
     if (!new_shadersrc)
     {
-        fprintf(stderr, "Error reading shader source file. Did it move?\n");
+        error_msg("Error reading shader source file. Did it move?\n");
         return;
     }
 
@@ -231,13 +240,10 @@ void Renderer::buildPipelinesIfNeedTo()
     // assign the new
     _shadersrc = new_shadersrc;
 
-    printf("Shader has changed! Rebuilding pipelines...\n");
+    error_msg("Shader has changed! Rebuilding pipelines...\n");
 
     // assume error until proven otherwise
     _shadererror = true;
-
-    // the shader has changed
-    // printf(" =========== New Shader source =========\n%s\n", new_shadersrc);
 
     er = build_shader_library(_device, new_shadersrc, &shaderlib);
 
@@ -262,7 +268,7 @@ void Renderer::buildPipelinesIfNeedTo()
     _shadererror = false;
     _computepso = computepipeline;
 
-    printf("Pipeline rebuilding complete.\n");
+    error_msg("Pipeline rebuilding complete.\n");
 }
 
 void Renderer::buildBuffers()
@@ -323,6 +329,7 @@ void Renderer::buildBuffers()
     _colorbuffer = colorbuf;
     _uvbuffer = uvbuf;
     _indexbuffer = indexbuf;
+    _dynbuffer = _device->newBuffer( sizeof(float), MTL::ResourceStorageModeManaged );
 }
 
 void Renderer::buildTexture()
@@ -349,6 +356,10 @@ void Renderer::generateTexture()
     MTL::Size gridsize, thread_group_size;
     NS::UInteger tgs;
 
+    float *time = reinterpret_cast<float*>(_dynbuffer->contents());
+    *time = getCurrentTimeInSeconds() - _starttime;
+    _dynbuffer->didModifyRange(NS::Range::Make(0, sizeof(float)));
+
     cmdbuf = _cmdqueue->commandBuffer();
     assert(cmdbuf);
 
@@ -356,6 +367,7 @@ void Renderer::generateTexture()
 
     enc->setComputePipelineState(_computepso);
     enc->setTexture(_texture, 0);
+    enc->setBuffer(_dynbuffer, 0, 0);
 
     gridsize = MTL::Size::Make(global_texture_width, global_texture_height, 1);
 

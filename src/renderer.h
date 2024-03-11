@@ -25,7 +25,9 @@ class Renderer
         MTL::Buffer *_positionbuffer;
         MTL::Buffer *_colorbuffer;
         MTL::Buffer *_uvbuffer;
+        MTL::Buffer *_dynbuffer; // holds dynamic state
         MTL::Texture *_texture;
+        double _starttime = 0.0;
         char *_shadersrc = nullptr;
         bool _shadererror = true;
 };
